@@ -9,6 +9,7 @@ class ZeroPadderTester[T <: Data](dut: ZeroPadderNative[T], in: Seq[Seq[Double]]
   // here some kind of requirements should be added, check inp size and parameters of dut
   //require(dut.params.numberOfPackets == in.length)
   //require(in.foreach())
+  //Random.setSeed(11110L)
 
   val inputData = in.flatten // this is total number of data -> if number of data is more than expected then
   val numZeros = dut.params.packetSizeEnd - dut.params.packetSizeStart

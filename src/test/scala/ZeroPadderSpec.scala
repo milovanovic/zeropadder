@@ -19,7 +19,7 @@ class ZeroPadderSpec extends AnyFlatSpec with Matchers {
       packetSizeStart = 5,
       packetSizeEnd = 8,
       numberOfPackets = 3,
-      queueDepth = 16,
+      queueDepth = 8,
       useBlockRam = false
     )
     Random.setSeed(11110L)
