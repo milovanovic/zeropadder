@@ -7,17 +7,17 @@ case class ZeroPadderParams[T <: Data: Real](
   proto: T,
   packetSizeStart: Int,
   packetSizeEnd:   Int,
-  queueDepth:      Int,
-  numberOfPackets:   Int,
-  useBlockRam:     Boolean
+  queueDepth:      Int,    // make this as an Option parameter
+  numberOfPackets: Int,
+  useQueue:        Boolean,
+  useBlockRam:     Boolean // make this as an Option parameter
 ) {
 
   def checkNumberOfSamples {
-    require(packetSizeStart < packetSizeEnd)
+    require(packetSizeStart <= packetSizeEnd)
   }
   def checkQueueDepth {
-    require(queueDepth > (packetSizeEnd - packetSizeStart))
+    require(queueDepth >= packetSizeEnd)
   }
 }
-
-// TODO: Maybe add last signal genearation after every packet if that is defined inside specific register!
+// TODO: Generation of last signal after each packet - to make it configurable both in compile and run-time
