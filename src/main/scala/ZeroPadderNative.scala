@@ -59,20 +59,34 @@ class ZeroPadderNative [T <: Data: Real] (val params: ZeroPadderParams[T]) exten
     zeroPaddFlag := true.B
   }
 
-  val rstProto = Wire(io.in.bits.cloneType)
+  val rstProtoComplex = Wire(DspComplex(params.proto.cloneType))
+  rstProtoComplex.real := Real[T].fromDouble(0.0)
+  rstProtoComplex.imag := Real[T].fromDouble(0.0)
+
+  val rstProto = Wire(params.proto.cloneType)
   rstProto := Real[T].fromDouble(0.0)
 
+  //rstProto.real := Real[T].fromDouble(0.0)
+  //rstProto.imag := Real[T].fromDouble(0.0)
+
   if (params.useQueue) {
-    val dataQueue = Module(new QueueWithSyncReadMem(params.proto.cloneType, entries = params.queueDepth, flow = !params.useBlockRam, useSyncReadMem = params.useBlockRam, useBlockRam = params.useBlockRam))
+    val dataQueue = Module(new QueueWithSyncReadMem(io.in.bits.cloneType, entries = params.queueDepth, flow = !params.useBlockRam, useSyncReadMem = params.useBlockRam, useBlockRam = params.useBlockRam))
     val inValidReg = RegNext(io.in.valid, init = false.B)
-    val inDataReg = RegNext(io.in.bits, init = rstProto)
+    val inDataReg = if (params.isDataComplex) RegNext(io.in.bits, init = rstProtoComplex) else RegNext(io.in.bits, init = rstProto)
 
     dataQueue.io.enq.bits  := inDataReg
     dataQueue.io.enq.valid := inValidReg
     dataQueue.io.deq.ready := ~zeroPaddFlag && io.out.ready
     when (zeroPaddFlag) { // if out_ready is not active then cntOutData will not count at all
       io.out.valid := true.B && io.out.ready
-      io.out.bits := rstProto
+
+      // not the best way to implement DspComplex data type but in this moment the fastest
+      if (params.isDataComplex) {
+        io.out.bits := rstProtoComplex
+      }
+      else {
+        io.out.bits := rstProto
+      }
       io.in.ready := dataQueue.io.enq.ready
     }
     .otherwise {
@@ -84,7 +98,12 @@ class ZeroPadderNative [T <: Data: Real] (val params: ZeroPadderParams[T]) exten
   else {
     when (zeroPaddFlag) {
       io.out.valid := true.B
-      io.out.bits := rstProto
+      if (params.isDataComplex) {
+        io.out.bits := rstProtoComplex
+      }
+      else {
+        io.out.bits := rstProto
+      }
       io.in.ready := false.B
     }
     .otherwise {
@@ -104,6 +123,7 @@ object ZeroPadderApp extends App
     queueDepth = 64,
     numberOfPackets = 3,
     useQueue = true,
+    isDataComplex = true,
     useBlockRam = false
   )
   // switch to new chisel stage!

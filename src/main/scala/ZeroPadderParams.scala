@@ -5,12 +5,13 @@ import dsptools.numbers._
 
 case class ZeroPadderParams[T <: Data: Real](
   proto: T,
-  packetSizeStart: Int,
-  packetSizeEnd:   Int,
-  queueDepth:      Int,    // make this as an Option parameter
-  numberOfPackets: Int,
+  isDataComplex: Boolean = false,
+  packetSizeStart: Int = 32,
+  packetSizeEnd:   Int = 32,
+  queueDepth:      Int = 64, // make this as an Option[Boolean]
+  numberOfPackets: Int = 4,
   useQueue:        Boolean,
-  useBlockRam:     Boolean // make this as an Option parameter
+  useBlockRam:     Boolean   // make this as an Option[Boolean]
 ) {
 
   def checkNumberOfSamples {

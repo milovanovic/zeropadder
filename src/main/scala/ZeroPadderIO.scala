@@ -5,9 +5,9 @@ import chisel3.util._
 import dsptools.numbers._
 
 class ZeroPadderIO[T <: Data: Real] (params: ZeroPadderParams[T]) extends Bundle {
-  val in = Flipped(Decoupled(params.proto))
+  val in = if (params.isDataComplex) Flipped(Decoupled(DspComplex(params.proto))) else Flipped(Decoupled(params.proto))
   val lastIn = Input(Bool())
-  val out = Decoupled(params.proto)
+  val out = if (params.isDataComplex) Decoupled(DspComplex(params.proto)) else Decoupled(params.proto)
   val lastOut = Output(Bool())
 
   val packetSizeStart = Input(UInt((log2Ceil(params.packetSizeStart+1).W)))
