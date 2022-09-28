@@ -18,15 +18,14 @@ class ZeroPadderNative [T <: Data: Real] (val params: ZeroPadderParams[T]) exten
 
   val io = IO(ZeroPadderIO(params))
 
-  val packetSizeStartReg = RegNext(io.packetSizeStart, 0.U)
-  val packetSizeEndReg = RegNext(io.packetSizeEnd, 0.U)
-  val numberOfPackets = RegNext(io.numberOfPackets, 0.U)
+  val packetSizeStartReg = RegNext(io.packetSizeStart, params.packetSizeStart.U)
+  val packetSizeEndReg = RegNext(io.packetSizeEnd, params.packetSizeEnd.U)
+  val numberOfPackets = RegNext(io.numberOfPackets, params.numberOfPackets.U)
 
   val log2packetSizeStart = log2Ceil(params.packetSizeStart)
   val log2packetSizeEnd = log2Ceil(params.packetSizeEnd)
   val log2numberOfPackets = log2Ceil(params.numberOfPackets)
 
-  val numZeros = packetSizeStartReg - packetSizeEndReg
   val cntOutData = RegInit(0.U(log2packetSizeStart.W))
   val cntPackets = RegInit(0.U(log2numberOfPackets.W))
   val zeroPaddFlag = Wire(Bool())
