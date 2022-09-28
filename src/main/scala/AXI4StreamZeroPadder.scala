@@ -50,7 +50,7 @@ abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E,
 
     val log2packetSizeStart = log2Ceil(params.packetSizeStart + 1)
     val log2packetSizeEnd = log2Ceil(params.packetSizeEnd + 1)
-    val log2numberOfPackets = log2Ceil(params.numberOfPackets + 1)
+    val d = log2Ceil(params.numberOfPackets + 1)
 
     val packetSizeStart = RegInit(params.packetSizeStart.U(log2packetSizeStart.W))
     val packetSizeEnd = RegInit(params.packetSizeEnd.U(log2packetSizeEnd.W))
@@ -79,8 +79,8 @@ abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E,
 
     if (params.isDataComplex) {
       val inComplex = Wire(DspComplex(params.proto.cloneType))
-      inComplex.real := in.bits.data(in.bits.data.getWidth/2 - 1, 0).asTypeOf(params.proto)
-      inComplex.imag := in.bits.data(in.bits.data.getWidth-1, in.bits.data.getWidth/2).asTypeOf(params.proto)
+      inComplex.real := in.bits.data(in.bits.data.getWidth-1, in.bits.data.getWidth/2).asTypeOf(params.proto)
+      inComplex.imag := in.bits.data(in.bits.data.getWidth/2 - 1, 0).asTypeOf(params.proto)
       zeropadder.io.in.bits := inComplex
     }
     else {
