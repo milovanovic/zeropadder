@@ -50,7 +50,7 @@ abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E,
 
     val log2packetSizeStart = log2Ceil(params.packetSizeStart + 1)
     val log2packetSizeEnd = log2Ceil(params.packetSizeEnd + 1)
-    val d = log2Ceil(params.numberOfPackets + 1)
+    val log2numberOfPackets = log2Ceil(params.numberOfPackets + 1)
 
     val packetSizeStart = RegInit(params.packetSizeStart.U(log2packetSizeStart.W))
     val packetSizeEnd = RegInit(params.packetSizeEnd.U(log2packetSizeEnd.W))
