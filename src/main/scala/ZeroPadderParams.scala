@@ -8,10 +8,10 @@ case class ZeroPadderParams[T <: Data: Real](
   isDataComplex: Boolean = false,
   packetSizeStart: Int = 32,
   packetSizeEnd:   Int = 32,
-  queueDepth:      Int = 64, // make this as an Option[Boolean]
+  queueDepth:      Int = 64, // make this as an Option[Int]
   numberOfPackets: Int = 4,
-  useQueue:        Boolean,
-  useBlockRam:     Boolean   // make this as an Option[Boolean]
+  useQueue:        Boolean = false,
+  useBlockRam:     Boolean = false  // make this as an Option[Boolean]
 ) {
 
   def checkNumberOfSamples {
