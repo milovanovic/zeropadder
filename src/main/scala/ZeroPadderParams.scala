@@ -18,7 +18,8 @@ case class ZeroPadderParams[T <: Data: Real](
     require(packetSizeStart <= packetSizeEnd)
   }
   def checkQueueDepth {
-    require(queueDepth >= packetSizeEnd)
+    if (useQueue == true)
+      require(queueDepth >= packetSizeEnd)
   }
 }
 // TODO: Generation of last signal after each packet - to make it configurable both in compile and run-time
