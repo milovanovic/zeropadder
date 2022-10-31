@@ -11,15 +11,15 @@ class ZeroPadderTester[T <: Data](dut: ZeroPadderNative[T], in: Seq[Seq[Double]]
   //require(in.foreach())
   //Random.setSeed(11110L)
 
-  val inputData = in.flatten // this is total number of data -> if number of data is more than expected then
+  val inputData = in.flatten // this is total number of data
   val numZeros = dut.params.packetSizeEnd - packetSizeStart //dut.params.packetSizeStart
   var expectedData = in.map{c => c ++: Seq.fill(numZeros)(0.0)}.flatten
 
-  expectedData.foreach { c => println(c.toString) }
+  //expectedData.foreach { c => println(c.toString) }
   val input1 = inputData.iterator
 
   var inValid = 0
-  updatableDspVerbose.withValue(true) { // maybe true will become false
+  updatableDspVerbose.withValue(false) { // maybe true will become false
 
     //poke(dut.io.packetSizeStart, dut.params.packetSizeStart)
     poke(dut.io.packetSizeStart, packetSizeStart)
@@ -45,7 +45,7 @@ class ZeroPadderTester[T <: Data](dut: ZeroPadderNative[T], in: Seq[Seq[Double]]
           case _ =>  fixTolLSBs.withValue(tol) { expect(dut.io.out.bits, expectedData.head) }
         }
         val lastOut = peek(dut.io.lastOut)
-        println(lastOut.toString)
+       //println(lastOut.toString)
         if (expectedData.length == 1) {
           expect(dut.io.lastOut, 1)
         }
