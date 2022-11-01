@@ -26,7 +26,7 @@ class ZeroPadderNative [T <: Data: Real] (val params: ZeroPadderParams[T]) exten
   val log2packetSizeEnd = log2Ceil(params.packetSizeEnd)
   val log2numberOfPackets = log2Ceil(params.numberOfPackets)
 
-  val cntOutData = RegInit(0.U(log2packetSizeStart.W))
+  val cntOutData = RegInit(0.U(log2packetSizeEnd.W))
   val cntPackets = RegInit(0.U(log2numberOfPackets.W))
   val zeroPaddFlag = Wire(Bool())
   val outFire = io.out.valid && io.out.ready
