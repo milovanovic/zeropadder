@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import dsptools._
 import dsptools.numbers._
-import dsputils._
+import utils._
 import chisel3.experimental.FixedPoint
 import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 import chisel3.internal.requireIsChiselType
