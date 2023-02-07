@@ -11,6 +11,7 @@ import freechips.rocketchip.amba.axi4stream._
 import freechips.rocketchip.config._
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.regmapper._
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 
 trait AXI4ZeroPadderStandaloneBlock extends AXI4ZeroPadderBlock[FixedPoint] {
   def standaloneParams = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = 1)
@@ -116,5 +117,6 @@ object ZeroPadderDspBlockAXI4 extends App
   implicit val p: Parameters = Parameters.empty
   val zeropadderModule = LazyModule(new AXI4ZeroPadderBlock(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 2) with AXI4ZeroPadderStandaloneBlock)
 
-  chisel3.Driver.execute(args, ()=> zeropadderModule.module)
+  //chisel3.Driver.execute(args, ()=> zeropadderModule.module)
+  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4ZeroPadderBlock"), Seq(ChiselGeneratorAnnotation(() => zeropadderModule.module)))
 }
