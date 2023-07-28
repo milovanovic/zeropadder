@@ -6,7 +6,7 @@ import dsptools.numbers._
 import scala.util.Random
 
 class ZeroPadderTester[T <: Data](dut: ZeroPadderNative[T], in: Seq[Seq[Double]], tol: Int, packetSizeStart: Int) extends DspTester(dut) {
-  // here some kind of requirements should be added, check inp size and parameters of dut
+  // add some checkers
   //require(dut.params.numberOfPackets == in.length)
   //require(in.foreach())
   //Random.setSeed(11110L)
@@ -15,13 +15,11 @@ class ZeroPadderTester[T <: Data](dut: ZeroPadderNative[T], in: Seq[Seq[Double]]
   val numZeros = dut.params.packetSizeEnd - packetSizeStart //dut.params.packetSizeStart
   var expectedData = in.map{c => c ++: Seq.fill(numZeros)(0.0)}.flatten
 
-  //expectedData.foreach { c => println(c.toString) }
   val input1 = inputData.iterator
 
   var inValid = 0
-  updatableDspVerbose.withValue(false) { // maybe true will become false
+  updatableDspVerbose.withValue(false) {
 
-    //poke(dut.io.packetSizeStart, dut.params.packetSizeStart)
     poke(dut.io.packetSizeStart, packetSizeStart)
     poke(dut.io.packetSizeEnd, dut.params.packetSizeEnd)
     poke(dut.io.numberOfPackets, dut.params.numberOfPackets)

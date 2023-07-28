@@ -13,8 +13,6 @@ class ZeroPadderIO[T <: Data: Real] (params: ZeroPadderParams[T]) extends Bundle
   val packetSizeStart = Input(UInt((log2Ceil(params.packetSizeStart+1).W)))
   val packetSizeEnd = Input(UInt((log2Ceil(params.packetSizeEnd+1).W)))
   val numberOfPackets = Input(UInt(log2Ceil(params.numberOfPackets + 1).W)) // check if +1 is necessary to have here
-
-  override def cloneType: this.type = ZeroPadderIO(params).asInstanceOf[this.type]
 }
 
 object ZeroPadderIO {

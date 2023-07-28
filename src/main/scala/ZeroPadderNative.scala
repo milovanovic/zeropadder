@@ -125,6 +125,6 @@ object ZeroPadderApp extends App
     isDataComplex = true,
     useBlockRam = false
   )
-  // switch to new chisel stage!
-  chisel3.Driver.execute(args, () => new ZeroPadderNative(params))
+
+  (new ChiselStage).execute(Array("--target-dir", "verilog/ZeroPadder"), Seq(ChiselGeneratorAnnotation(() => new ZeroPadderNative(params))))
 }
