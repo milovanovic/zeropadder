@@ -1,8 +1,8 @@
 package zeropadder
 
-import chisel3._
 import chisel3.util._
-import chisel3.experimental._
+import chisel3.{fromDoubleToLiteral => _, fromIntToBinaryPoint => _, _}
+import fixedpoint._
 import dsptools.numbers._
 
 import dspblocks._
@@ -15,16 +15,18 @@ import org.chipsalliance.cde.config.Parameters
 
 trait AXI4ZeroPadderStandaloneBlock extends AXI4ZeroPadderBlock[FixedPoint] {
   def standaloneParams = AXI4BundleParameters(addrBits = 32, dataBits = 32, idBits = 1)
-  val ioMem = mem.map { m => {
-    val ioMemNode = BundleBridgeSource(() => AXI4Bundle(standaloneParams))
+  val ioMem = mem.map { m =>
+    {
+      val ioMemNode = BundleBridgeSource(() => AXI4Bundle(standaloneParams))
 
-    m :=
-      BundleBridgeToAXI4(AXI4MasterPortParameters(Seq(AXI4MasterParameters("bundleBridgeToAXI4")))) :=
-      ioMemNode
+      m :=
+        BundleBridgeToAXI4(AXI4MasterPortParameters(Seq(AXI4MasterParameters("bundleBridgeToAXI4")))) :=
+        ioMemNode
 
-    val ioMem = InModuleBody { ioMemNode.makeIO() }
-    ioMem
-  }}
+      val ioMem = InModuleBody { ioMemNode.makeIO() }
+      ioMem
+    }
+  }
 
   val ioInNode = BundleBridgeSource(() => new AXI4StreamBundle(AXI4StreamBundleParameters(n = 4)))
   val ioOutNode = BundleBridgeSink[AXI4StreamBundle]()
@@ -39,11 +41,16 @@ trait AXI4ZeroPadderStandaloneBlock extends AXI4ZeroPadderBlock[FixedPoint] {
   val out = InModuleBody { ioOutNode.makeIO() }
 }
 
-abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E, O, B <: Data] (params: ZeroPadderParams[T], beatBytes: Int) extends LazyModule()(Parameters.empty) with DspBlock[D, U, E, O, B] with HasCSR {
+abstract class ZeroPadderBlock[T <: Data: Real: BinaryRepresentation, D, U, E, O, B <: Data](
+  params:    ZeroPadderParams[T],
+  beatBytes: Int)
+    extends LazyModule()(Parameters.empty)
+    with DspBlock[D, U, E, O, B]
+    with HasCSR {
 
   val streamNode = AXI4StreamIdentityNode()
   lazy val module = new LazyModuleImp(this) {
-    val (in, _)  = streamNode.in(0)
+    val (in, _) = streamNode.in(0)
     val (out, _) = streamNode.out(0)
 
     //  ZeroPadder module
@@ -58,16 +65,26 @@ abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E,
     val numberOfPackets = RegInit(params.numberOfPackets.U(log2numberOfPackets.W))
 
     val fields = Seq(
-      RegField(log2packetSizeStart, packetSizeStart,
-        RegFieldDesc(name = "packetSizeStart", desc = "Defines number of samples inside packet before zero padding")),
-      RegField(log2packetSizeEnd, packetSizeEnd,
-        RegFieldDesc(name = "packetSizeEnd", desc = "Defines number of samples inside packet after zero padding")),
-      RegField(log2numberOfPackets, numberOfPackets,
-        RegFieldDesc(name = "numberOfPackets", desc = "Defines number of packets"))
+      RegField(
+        log2packetSizeStart,
+        packetSizeStart,
+        RegFieldDesc(name = "packetSizeStart", desc = "Defines number of samples inside packet before zero padding")
+      ),
+      RegField(
+        log2packetSizeEnd,
+        packetSizeEnd,
+        RegFieldDesc(name = "packetSizeEnd", desc = "Defines number of samples inside packet after zero padding")
+      ),
+      RegField(
+        log2numberOfPackets,
+        numberOfPackets,
+        RegFieldDesc(name = "numberOfPackets", desc = "Defines number of packets")
+      )
     )
 
     regmap(
-      fields.zipWithIndex.map({ case (f, i) =>
+      fields.zipWithIndex.map({
+        case (f, i) =>
           i * beatBytes -> Seq(f)
       }): _*
     )
@@ -80,33 +97,46 @@ abstract class ZeroPadderBlock [T <: Data : Real: BinaryRepresentation, D, U, E,
 
     if (params.isDataComplex) {
       val inComplex = Wire(DspComplex(params.proto.cloneType))
-      inComplex.real := in.bits.data(in.bits.data.getWidth-1, in.bits.data.getWidth/2).asTypeOf(params.proto)
-      inComplex.imag := in.bits.data(in.bits.data.getWidth/2 - 1, 0).asTypeOf(params.proto)
+      inComplex.real := in.bits.data(in.bits.data.getWidth - 1, in.bits.data.getWidth / 2).asTypeOf(params.proto)
+      inComplex.imag := in.bits.data(in.bits.data.getWidth / 2 - 1, 0).asTypeOf(params.proto)
       zeropadder.io.in.bits := inComplex
+    } else {
+      zeropadder.io.in.bits := in.bits.data.asTypeOf(params.proto)
     }
-    else {
-      zeropadder.io.in.bits  := in.bits.data.asTypeOf(params.proto)
-    }
-    in.ready           := zeropadder.io.in.ready
-    zeropadder.io.lastIn      := in.bits.last
+    in.ready := zeropadder.io.in.ready
+    zeropadder.io.lastIn := in.bits.last
 
-    out.valid        := zeropadder.io.out.valid
+    out.valid := zeropadder.io.out.valid
     zeropadder.io.out.ready := out.ready
     out.bits.data := zeropadder.io.out.bits.asUInt
     out.bits.last := zeropadder.io.lastOut
   }
 }
 
-class AXI4ZeroPadderBlock[T <: Data : Real: BinaryRepresentation](params: ZeroPadderParams[T], address: AddressSet, _beatBytes: Int = 4)(implicit p: Parameters) extends ZeroPadderBlock[T, AXI4MasterPortParameters, AXI4SlavePortParameters, AXI4EdgeParameters, AXI4EdgeParameters, AXI4Bundle](params, _beatBytes) with AXI4DspBlock with AXI4HasCSR {
+class AXI4ZeroPadderBlock[T <: Data: Real: BinaryRepresentation](
+  params:     ZeroPadderParams[T],
+  address:    AddressSet,
+  _beatBytes: Int = 4
+)(
+  implicit p: Parameters)
+    extends ZeroPadderBlock[
+      T,
+      AXI4MasterPortParameters,
+      AXI4SlavePortParameters,
+      AXI4EdgeParameters,
+      AXI4EdgeParameters,
+      AXI4Bundle
+    ](params, _beatBytes)
+    with AXI4DspBlock
+    with AXI4HasCSR {
   override val mem = Some(AXI4RegisterNode(address = address, beatBytes = _beatBytes))
 }
 
-object ZeroPadderDspBlockAXI4 extends App
-{
+object ZeroPadderDspBlockAXI4 extends App {
   val params: ZeroPadderParams[FixedPoint] = ZeroPadderParams(
     proto = FixedPoint(16.W, 14.BP),
     packetSizeStart = 16,
-    packetSizeEnd  = 32,
+    packetSizeEnd = 32,
     queueDepth = 64,
     numberOfPackets = 3,
     useQueue = true,
@@ -115,8 +145,14 @@ object ZeroPadderDspBlockAXI4 extends App
   )
   val baseAddress = 0x500
   implicit val p: Parameters = Parameters.empty
-  val zeropadderModule = LazyModule(new AXI4ZeroPadderBlock(params, AddressSet(baseAddress + 0x100, 0xFF), _beatBytes = 2) with AXI4ZeroPadderStandaloneBlock)
+  val zeropadderModule = LazyModule(
+    new AXI4ZeroPadderBlock(params, AddressSet(baseAddress + 0x100, 0xff), _beatBytes = 2)
+      with AXI4ZeroPadderStandaloneBlock
+  )
 
   //chisel3.Driver.execute(args, ()=> zeropadderModule.module)
-  (new ChiselStage).execute(Array("--target-dir", "verilog/AXI4ZeroPadderBlock"), Seq(ChiselGeneratorAnnotation(() => zeropadderModule.module)))
+  (new ChiselStage).execute(
+    Array("--target-dir", "verilog/AXI4ZeroPadderBlock"),
+    Seq(ChiselGeneratorAnnotation(() => zeropadderModule.module))
+  )
 }
